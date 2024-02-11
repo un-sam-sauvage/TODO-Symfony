@@ -1,0 +1,12 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block body %}
+
+    <h1>Welcome to the TODO website</h1>
+    {% if app.user %}
+        <p>you're logged with : {{ app.user.username }}</p>
+    {% endif %}
+
+{% endblock %}
