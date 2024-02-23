@@ -7,19 +7,33 @@ use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
+
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 
 #[Route('/task')]
 class TaskController extends AbstractController
 {
     #[Route('/', name: 'app_task_index', methods: ['GET'])]
-    public function index(TaskRepository $taskRepository): Response
+    public function index(TaskRepository $taskRepository): JsonResponse
     {
-        return $this->render('task/index.html.twig', [
-            'tasks' => $taskRepository->findAll(),
-        ]);
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+        $normalizers = [new ObjectNormalizer($classMetadataFactory)];
+
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $tasks = $taskRepository->findAll();
+        $jsonTasks = $serializer->serialize($tasks, "json", ["groups" => "getTask"]);
+        return new JsonResponse($jsonTasks, 200, [], true);
     }
 
     #[Route('/new', name: 'app_task_new', methods: ['GET', 'POST'])]

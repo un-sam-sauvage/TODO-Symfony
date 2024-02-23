@@ -42,9 +42,25 @@ services:
     image: phpmyadmin
     restart: always
     ports:
-      - 8080:80
+      - "3080:80"
     environment:
       - PMA_ARBITRARY=1
+
+  # encore:
+  #   image: node:latest
+  #   volumes:
+  #       - .:/var/www
+  #   working_dir: /var/www
+  #   command: >
+  #       sh -c "apt update &&
+  #               npm install &&
+  #               npm run dev -- --port 8080"
+  #   expose:
+  #     - "8080"
+  #   ports:
+  #       - "8080:8080"
+  #   environment:
+  #     - SERVER_PORT=8080
 
 volumes:
   db_data: {}

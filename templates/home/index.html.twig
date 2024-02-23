@@ -5,8 +5,8 @@
 {% block body %}
 
     <h1>Welcome to the TODO website</h1>
+    <task-list></task-list>
     {% if app.user %}
         <p>you're logged with : {{ app.user.username }}</p>
     {% endif %}
-
 {% endblock %}
