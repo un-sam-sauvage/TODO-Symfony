@@ -29,6 +29,17 @@ class Task
     #[Groups(['getTask'])]
     private ?User $author = null;
 
+	#[ORM\Column (options: ["default" => "CURRENT_TIMESTAMP"])]
+	private ?\DateTimeImmutable $created_at;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $due_at = null;
+
+    public function __construct()
+    {
+        $this->created_at = new \DateTimeImmutable();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -66,6 +77,30 @@ class Task
     public function setAuthor(?User $author): static
     {
         $this->author = $author;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->created_at;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $created_at): static
+    {
+        $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getDueAt(): ?\DateTimeImmutable
+    {
+        return $this->due_at;
+    }
+
+    public function setDueAt(?\DateTimeImmutable $due_at): static
+    {
+        $this->due_at = $due_at;
 
         return $this;
     }

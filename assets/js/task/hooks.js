@@ -1,5 +1,27 @@
 import { useCallback, useState } from "react";
 
+async function jsonFetch (url, method = "GET", data = null) {
+    const params = {
+        method: method,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }
+    if (data) {
+        params.body = JSON.stringify(data);
+    }
+    const response = await fetch(url, params)
+    if (response.status === 204) return null;
+    const responseData = await response.json();
+    if (response.ok) {
+        return responseData
+    } else {
+        console.error(responseData);
+    }
+    
+}
+
 export function usePaginatedFetch (url) {
     //On définit nos hooks
     const [loading, setLoading] = useState(false);
@@ -8,16 +30,11 @@ export function usePaginatedFetch (url) {
     //On défini la fonction pour éviter de devoir le refaire
     const load = useCallback(async () => {
         setLoading(true);
-        const response = await fetch(url, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
-        const responseData = await response.json();
-        if (response.ok) {
-            setItems(responseData);
-        } else {
-            console.error(responseData);
+        try {
+            const response = await jsonFetch(url)
+            setItems(response);
+        } catch (error) {
+            console.error(error);
         }
         setLoading(false);
 
@@ -27,5 +44,27 @@ export function usePaginatedFetch (url) {
         items,
         load,
         loading
+    }
+}
+
+export function useFetch (url, method = "POST", callback = null) {
+    const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+    const load = useCallback(async (data = null)  => {
+        try {
+            setLoading(true);
+            const response = await jsonFetch(url, method, data);
+            if (callback) {
+                callback(response);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    }, [url, method, callback]);
+    return {
+        loading,
+        errors,
+        load
     }
 }
