@@ -1,0 +1,15 @@
+FROM node:latest
+
+RUN apt-get update
+
+WORKDIR /var/www
+
+COPY package.json .
+
+COPY webpack.config.js .
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 8080

@@ -14,46 +14,51 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 #[Route('/task')]
 class TaskController extends AbstractController
 {
-    #[Route('/', name: 'app_task_index', methods: ['GET'])]
-    public function index(TaskRepository $taskRepository): JsonResponse
+    private Serializer $serializer;
+
+    public function __construct()
     {
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
         $normalizers = [new ObjectNormalizer($classMetadataFactory)];
 
-        $serializer = new Serializer($normalizers, $encoders);
+        $this->serializer = new Serializer($normalizers, $encoders);
+    }
 
+    #[Route('/', name: 'app_task_index', methods: ['GET'])]
+    public function index(TaskRepository $taskRepository): JsonResponse
+    {
         $tasks = $taskRepository->findAll();
-        $jsonTasks = $serializer->serialize($tasks, "json", ["groups" => "getTask"]);
+        $jsonTasks = $this->serializer->serialize($tasks, "json", ["groups" => "getTask"]);
         return new JsonResponse($jsonTasks, 200, [], true);
     }
 
     #[Route('/new', name: 'app_task_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        $task = new Task();
-        $form = $this->createForm(TaskType::class, $task);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($task);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_task_index', [], Response::HTTP_SEE_OTHER);
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(["error" => "You must be authenticated to create a task"], 401, []);
         }
 
-        return $this->render('task/new.html.twig', [
-            'task' => $task,
-            'form' => $form,
-        ]);
+        $task = new Task();
+        $task->setAuthor($user);
+
+        $this->serializer->deserialize($request->getContent(), Task::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $task]);
+
+        $entityManager->persist($task);
+        $entityManager->flush();
+
+        //FIXME: La tâche s'est bien crée mais l'affichage ne s'est pas actualisé, à voir pourquoi.
+        return new JsonResponse($task, 201, []);
     }
 
     #[Route('/{id}', name: 'app_task_show', methods: ['GET'])]

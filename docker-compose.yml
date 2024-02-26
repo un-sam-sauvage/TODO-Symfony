@@ -47,6 +47,17 @@ services:
       - PMA_ARBITRARY=1
 
   # encore:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-Node
+  #   volumes:
+  #     - .:/var/www
+  #   working_dir: /var/www
+  #   ports:
+  #     - "8080:8080"
+  #   command: "npm run dev-server"
+
+  # encore:
   #   image: node:latest
   #   volumes:
   #       - .:/var/www

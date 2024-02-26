@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { render, unmountComponentAtNode } from "react-dom";
-import { usePaginatedFetch } from "./hooks";
+import { useFetch, usePaginatedFetch } from "./hooks";
 import { useToggle } from "@uidotdev/usehooks";
 
 const Tasks = React.memo(() => {
     const {items: tasks, load, loading} = usePaginatedFetch('/task')
-    //Je n'arrive pas à utiliser cette méthode à cause d'un trop grand nombre de render,
-    //https://stackoverflow.com/questions/55265604/uncaught-invariant-violation-too-many-re-renders-react-limits-the-number-of-re
-    // const [showForm, toggleShowForm] = useState(!!test);
     const [showForm, toggleShowForm] = useToggle(false)
     
     useEffect(() => {
@@ -18,13 +15,41 @@ const Tasks = React.memo(() => {
         {/* loading ? 'Chargement...' : ''*/}
         {/* équivalent */}
         <button onClick={toggleShowForm}>Create a new task</button>
+        {
+            showForm && <FormCreateTask 
+            isEdit={false}
+            toggleShowForm={toggleShowForm}
+            />
+        }
         {tasks.map(task => <Task key={task.id} task={task}/>)}
         {loading && 'Chargement...'}
         </div>
 })
 
-function FormCreateTask() {
 
+//TODO: Pensez à rendre modulable pour l'édition d'une tâche
+function FormCreateTask({isEdit, toggleShowForm}) {
+    const refTitle = useRef(null);
+    const refDescription = useRef(null);
+    const {load, loading, errors} = useFetch('/task/new');
+    const onSubmit = useCallback(e => {
+        e.preventDefault();
+        load ({
+            title: refTitle.current.value,
+            description : refDescription.current.value
+        })
+    })
+    return <form onSubmit={onSubmit}>
+        <fieldset>
+            <a onClick={toggleShowForm}>Close</a>
+            <legend>Create a new task</legend>
+            <label htmlFor="new-task-title">Title</label>
+            <input ref={refTitle} type="text" id="new-task-title" />
+            <label htmlFor="new-task-description">Description</label>
+            <textarea ref={refDescription} name="new-task-description" id="new-task-description"></textarea>
+            <button type="submit">{isEdit ? "Edit" : "Create"}</button>
+        </fieldset>
+    </form>
 }
 
 const Task = React.memo(({task}) => {

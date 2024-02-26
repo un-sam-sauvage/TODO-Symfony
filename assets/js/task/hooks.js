@@ -11,6 +11,7 @@ async function jsonFetch (url, method = "GET", data = null) {
     if (data) {
         params.body = JSON.stringify(data);
     }
+    console.log(params);
     const response = await fetch(url, params)
     if (response.status === 204) return null;
     const responseData = await response.json();
@@ -19,7 +20,6 @@ async function jsonFetch (url, method = "GET", data = null) {
     } else {
         console.error(responseData);
     }
-    
 }
 
 export function usePaginatedFetch (url) {
