@@ -53,6 +53,10 @@ Encore
         config.corejs = '3.23';
     })
 
+    .configureWatchOptions(function(watchOptions) {
+        watchOptions.poll = true;
+    })
+
     // enables Sass/SCSS support
     //.enableSassLoader()
 

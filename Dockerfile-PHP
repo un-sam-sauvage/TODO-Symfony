@@ -1,0 +1,21 @@
+FROM php:8.2-fpm
+
+RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    zlib1g-dev \
+    libzip-dev \
+    wget --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-install pdo intl zip pdo_mysql
+
+RUN wget https://getcomposer.org/download/2.6.6/composer.phar \
+    && mv composer.phar /usr/bin/composer && chmod +x /usr/bin/composer
+
+COPY composer.json .
+
+RUN composer install -n
+
+EXPOSE 80
+

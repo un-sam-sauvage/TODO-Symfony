@@ -15,10 +15,19 @@ services:
       - php
 
 
-  php:
-    restart: unless-stopped
-    image: lucasluk798/php:8.2
+  # php:
+  #   restart: unless-stopped
+  #   image: lucasluk798/php:8.2
     
+  #   volumes:
+  #     - .:/var/www:delegated
+  #   environment:
+  #     - APP_ENV=dev
+
+  php:
+    build: 
+      context: .
+      dockerfile: Dockerfile-PHP
     volumes:
       - .:/var/www:delegated
     environment:
@@ -46,16 +55,14 @@ services:
     environment:
       - PMA_ARBITRARY=1
 
-  # encore:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile-Node
-  #   volumes:
-  #     - .:/var/www
-  #   working_dir: /var/www
-  #   ports:
-  #     - "8080:8080"
-  #   command: "npm run dev-server"
+  encore:
+    build:
+      context: .
+      dockerfile: Dockerfile-Node
+    ports:
+      - "8080:8080"
+    command: "npm run dev-server"
+    # command: "npm run dev"
 
   # encore:
   #   image: node:latest
