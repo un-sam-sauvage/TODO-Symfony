@@ -57,8 +57,8 @@ class TaskController extends AbstractController
         $entityManager->persist($task);
         $entityManager->flush();
 
-        //FIXME: La tâche s'est bien crée mais l'affichage ne s'est pas actualisé, à voir pourquoi.
-        return new JsonResponse($task, 201, []);
+        $jsonTask = $this->serializer->serialize($task, "json", ["groups" => "getTask"]);
+        return new JsonResponse($jsonTask, 201, []);
     }
 
     #[Route('/{id}', name: 'app_task_show', methods: ['GET'])]

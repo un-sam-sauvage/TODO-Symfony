@@ -4,21 +4,22 @@ import { useFetch, usePaginatedFetch } from "./hooks";
 import { useToggle } from "@uidotdev/usehooks";
 
 const Tasks = React.memo(() => {
-    const {items: tasks, load, loading} = usePaginatedFetch('/task')
+    const {items: tasks, setItems: setTasks, load, loading} = usePaginatedFetch('/task')
     const [showForm, toggleShowForm] = useToggle(false)
-    
+    const addTask = useCallback((task) => {
+        setTasks(tasks => [task, ...tasks])
+    })
     useEffect(() => {
         load()
     }, []);
 
     return <div>
-        {/* loading ? 'Chargement...' : ''*/}
-        {/* équivalent */}
         <button onClick={toggleShowForm}>Create a new task</button>
         {
             showForm && <FormCreateTask 
             isEdit={false}
             toggleShowForm={toggleShowForm}
+            onNewTask={addTask}
             />
         }
         {tasks.map(task => <Task key={task.id} task={task}/>)}
@@ -28,10 +29,16 @@ const Tasks = React.memo(() => {
 
 
 //TODO: Pensez à rendre modulable pour l'édition d'une tâche
-function FormCreateTask({isEdit, toggleShowForm}) {
+//TODO: Pesnez à ajouter la gestion des erreurs (si user pas connecté...)
+function FormCreateTask({isEdit, toggleShowForm, onNewTask}) {
     const refTitle = useRef(null);
     const refDescription = useRef(null);
-    const {load, loading, errors} = useFetch('/task/new');
+    const onSuccess = useCallback(task => {
+        onNewTask(task);
+        refTitle.current.value = "";
+        refDescription.current.value = ""
+    }, [refTitle, refDescription, onNewTask])
+    const {load, loading, errors} = useFetch('/task/new', 'POST', onSuccess);
     const onSubmit = useCallback(e => {
         e.preventDefault();
         load ({

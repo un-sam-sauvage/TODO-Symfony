@@ -22,13 +22,13 @@ final class Version20240224120207 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE task ADD created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, ADD due_at DATETIME DEFAULT NULL');
         $this->addSql('ALTER TABLE task ADD CONSTRAINT FK_527EDB25F675F31B FOREIGN KEY (author_id) REFERENCES user (id)');
-        $this->addSql('CREATE INDEX IDX_527EDB25F675F31B ON task (author_id)');
+        // $this->addSql('CREATE INDEX IDX_527EDB25F675F31B ON task (author_id)');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE task DROP FOREIGN KEY FK_527EDB25F675F31B');
+        // $this->addSql('ALTER TABLE task DROP FOREIGN KEY FK_527EDB25F675F31B');
         $this->addSql('DROP INDEX IDX_527EDB25F675F31B ON task');
         $this->addSql('ALTER TABLE task DROP created_at, DROP due_at');
     }

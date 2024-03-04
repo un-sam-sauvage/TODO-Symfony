@@ -15,27 +15,23 @@ services:
       - php
 
 
-  # php:
-  #   restart: unless-stopped
-  #   image: lucasluk798/php:8.2
-    
-  #   volumes:
-  #     - .:/var/www:delegated
-  #   environment:
-  #     - APP_ENV=dev
-
   php:
-    build: 
-      context: .
-      dockerfile: Dockerfile-PHP
+    restart: unless-stopped
+    image: lucasluk798/php:8.2
+    
     volumes:
       - .:/var/www:delegated
     environment:
       - APP_ENV=dev
 
-  mailer:
-    image: schickling/mailcatcher
-    ports: [1025, 1080]
+  # php:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile-PHP
+  #   volumes:
+  #     - .:/var/www:delegated
+  #   environment:
+  #     - APP_ENV=dev
 
   database:
       image: 'mysql:8.0'
@@ -64,18 +60,18 @@ services:
   #   command: "npm run dev-server"
   #   # command: "npm run dev"
 
-  encore:
-    image: node:latest
-    volumes:
-        - .:/var/www
-    working_dir: /var/www
-    command: >
-        sh -c "npm install &&
-                npm run dev-server -- --port 8080"
-    ports:
-        - "8080:8080"
-    environment:
-      - SERVER_PORT=8080
+  # encore:
+  #   image: node:latest
+  #   volumes:
+  #       - .:/var/www
+  #   working_dir: /var/www
+  #   command: >
+  #       sh -c "npm install &&
+  #               npm run dev-server -- --port 8080"
+  #   ports:
+  #       - "8080:8080"
+  #   environment:
+  #     - SERVER_PORT=8080
 
 volumes:
   db_data: {}
