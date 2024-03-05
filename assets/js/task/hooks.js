@@ -22,6 +22,7 @@ async function jsonFetch (url, method = "GET", data = null) {
         return responseData
     } else {
         console.error(responseData);
+        throw responseData;
     }
 }
 
@@ -47,7 +48,7 @@ export function usePaginatedFetch (url) {
         items,
         setItems,
         load,
-        loading
+        loading,
     }
 }
 
@@ -63,6 +64,7 @@ export function useFetch (url, method = "POST", callback = null) {
             }
         } catch (error) {
             console.error(error);
+            setErrors(error);
         }
         setLoading(false);
     }, [url, method, callback]);
