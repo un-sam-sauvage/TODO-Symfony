@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Task;
-use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,6 +14,7 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -42,11 +42,11 @@ class TaskController extends AbstractController
     }
 
     #[Route('/new', name: 'app_task_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function new(Request $request, EntityManagerInterface $entityManager, ResponseController $responseController): JsonResponse
     {
         $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(["error" => "You must be authenticated to create a task"], 401, []);
+        if ($responseController->checkAuthentication($user)) {
+            return $responseController->checkAuthentication($user);
         }
 
         $task = new Task();
@@ -58,6 +58,7 @@ class TaskController extends AbstractController
         $entityManager->flush();
 
         $jsonTask = $this->serializer->serialize($task, "json", ["groups" => "getTask"]);
+
         return new JsonResponse($jsonTask, 201, []);
     }
 
@@ -69,32 +70,43 @@ class TaskController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_task_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Task $task, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}/edit', name: 'app_task_edit', methods: ['PATCH'])]
+    public function edit(Request $request, Task $task, EntityManagerInterface $entityManager, ResponseController $responseController): Response
     {
-        $form = $this->createForm(TaskType::class, $task);
-        $form->handleRequest($request);
+        $user = $this->getUser();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_task_index', [], Response::HTTP_SEE_OTHER);
+        if ($responseController->checkAuthor($user, $task, "edit")) {
+            return $responseController->checkAuthor($user, $task, "edit");
         }
+        $taskToEdit = new Task();
+        $this->serializer->deserialize($request->getContent(), Task::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $taskToEdit]);
 
-        return $this->render('task/edit.html.twig', [
-            'task' => $task,
-            'form' => $form,
-        ]);
+        $task->setTitle($taskToEdit->getTitle());
+        $task->setDescription($taskToEdit->getDescription());
+
+        $entityManager->flush();
+        $jsonTask = $this->serializer->serialize($task, "json", ["groups" => "getTask"]);
+        return new JsonResponse($jsonTask, 200, []);
     }
 
-    #[Route('/{id}', name: 'app_task_delete', methods: ['POST'])]
+    #[Route('/{id}/delete', name: 'app_task_delete', methods: ['DELETE'])]
     public function delete(Request $request, Task $task, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$task->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete_'. $task->getId(), $request->toArray()["token"])) {
             $entityManager->remove($task);
             $entityManager->flush();
         }
+        return new JsonResponse([], 204, []);
+    }
 
-        return $this->redirectToRoute('app_task_index', [], Response::HTTP_SEE_OTHER);
+    #[Route(path: '/{id}/get-token', name: 'app_get_token', methods: ['GET'])]
+    public function getToken(Task $task, CsrfTokenManagerInterface $csrfTokenManagerInterface, ResponseController $responseController) {
+        $user = $this->getUser();
+        if ($responseController->checkAuthor($user, $task, "delete")) {
+            return $responseController->checkAuthor($user, $task, "delete");
+        }
+        
+        $token = $csrfTokenManagerInterface->getToken('delete_'. $task->getId())->getValue();
+        return new JsonResponse(["token" => $token], 200, []);
     }
 }
