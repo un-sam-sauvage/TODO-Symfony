@@ -10,7 +10,7 @@ export function PopupComponent ({text, togglePopup, yesCallback, disabled}) {
     })
     return <div>
         <p>{text}</p>
-        <button disabled={isDisabled} onClick={callback}>Yes</button>
-        <button onClick={togglePopup}>No</button>
+        <button className="btn grow" disabled={isDisabled} onClick={callback}>Yes</button>
+        <button className="btn grow" onClick={togglePopup}>No</button>
     </div>
 }

@@ -1,12 +1,14 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import { useFetch } from "./hooks";
-import { useClickAway, useToggle } from "@uidotdev/usehooks";
+import { useToggle } from "@uidotdev/usehooks";
 import { SpinnerComponent } from "../components/SpinnerComponent";
 import { IconComponent } from "../components/IconComponent";
 import { FormComponent } from "../components/FormComponent";
 import { ErrorComponent } from "../components/ErrorComponent";
 import { PopupComponent } from "../components/PopupComponent";
+import './style/task.css';
+import '../../styles/app.css';
 
 function Tasks () {
     const {items: tasks, setItems: setTasks, load, loading} = useFetch('/task', 'GET');
@@ -19,7 +21,7 @@ function Tasks () {
     }, []);
 
     return <div>
-        <button onClick={toggleShowForm}>Create a new task</button>
+        <button className="btn grow primary" onClick={toggleShowForm}>Create a new task</button>
         {
             showForm && <FormComponent 
             route={'/task/new'}
@@ -28,14 +30,16 @@ function Tasks () {
             onCallback={addTask}
             />
         }
+        <div id="tasks-container">
         {tasks.map(
             task => <Task 
-                key={task.id} 
-                task={task} 
-                setTasks={setTasks}
-                tasks={tasks}
-                />
-        )}
+            key={task.id} 
+            task={task} 
+            setTasks={setTasks}
+            tasks={tasks}
+            />
+            )}
+        </div>
         {loading && <SpinnerComponent />}
         </div>
 }
@@ -65,7 +69,7 @@ function Task ({task, tasks, setTasks})  {
     })
 
     const deleteTask = useCallback((tokenRetrieved = null) => {
-        //TODO: faire le feedback du chargement.
+        //FIXME: Quand il y a une erreur suite à la suppression d'une tâche, le loading reste
         if(tokenRetrieved.token && (errorsToken && errorsToken.error == "" || errorsToken.error == undefined)) {
             setToken(tokenRetrieved.token);
         }
@@ -107,9 +111,9 @@ function Task ({task, tasks, setTasks})  {
     return <div className="task-card">
         <h3 className="task-title">{task.title}</h3>
         <p className="task-description">{task.description}</p>
-        <div>
-            <button onClick={getToken}><IconComponent iconName={"trash"}/></button>
-            <button onClick={toggleIsEdit}><IconComponent iconName={"pen-to-square"}/></button>
+        <div className="btn-container">
+            <button className="btn grow secondary"  onClick={getToken}><IconComponent iconName={"trash"}/></button>
+            <button className="btn grow secondary" onClick={toggleIsEdit}><IconComponent iconName={"pen-to-square"}/></button>
         </div>
         {errorsToken && <ErrorComponent error={errorsToken.error}/>}
         {isEdit && <FormComponent 

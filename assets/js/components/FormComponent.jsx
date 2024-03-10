@@ -35,15 +35,20 @@ export function FormComponent ({
         }
         load(params)
     })
-    return <form onSubmit={onSubmit}>
+    return <form onSubmit={onSubmit} className="form-task">
         <fieldset>
-            <a onClick={toggleShowForm}>Close</a>
-            <legend>Create a new task</legend>
+            <legend>{isEdit ? "Edit the task" : "Create a new task"}</legend>
+
+            <a className="btn btn-close" onClick={toggleShowForm}>Close</a>
+
             <label htmlFor="new-task-title">Title</label>
-            <input ref={refTitle} type="text" id="new-task-title" defaultValue={isEdit && task.title}/>
+            <input ref={refTitle} type="text" id="new-task-title" defaultValue={isEdit ? task.title : ""}/>
+
             <label htmlFor="new-task-description">Description</label>
-            <textarea ref={refDescription} name="new-task-description" id="new-task-description" defaultValue={isEdit && task.description}></textarea>
-            <button type="submit" disabled={loading && true}>{isEdit ? "Edit" : "Create"}</button>
+            <textarea ref={refDescription} name="new-task-description" id="new-task-description" defaultValue={isEdit ? task.description : ""}></textarea>
+
+            <button className="btn grow" type="submit" disabled={loading && true}>{isEdit ? "Edit" : "Create"}</button>
+
             {errors.error && <ErrorComponent error={errors.error}/>}
             {loading && <SpinnerComponent />}
         </fieldset>
