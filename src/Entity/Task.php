@@ -30,14 +30,19 @@ class Task
     private ?User $author = null;
 
 	#[ORM\Column (options: ["default" => "CURRENT_TIMESTAMP"])]
-	private ?\DateTimeImmutable $created_at;
+         	private ?\DateTimeImmutable $created_at;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $due_at = null;
 
+    #[ORM\Column(options: ["default" => "false"])]
+    #[Groups(['getTask'])]
+    private ?bool $isDone = null;
+
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
+        $this->isDone = false;
     }
 
     public function getId(): ?int
@@ -101,6 +106,18 @@ class Task
     public function setDueAt(?\DateTimeImmutable $due_at): static
     {
         $this->due_at = $due_at;
+
+        return $this;
+    }
+
+    public function isIsDone(): ?bool
+    {
+        return $this->isDone;
+    }
+
+    public function setIsDone(bool $isDone): static
+    {
+        $this->isDone = $isDone;
 
         return $this;
     }

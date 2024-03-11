@@ -16,8 +16,8 @@
     border: none;
     padding: 5px;
     transition: all .15s;
-  }
-  
+}
+
 .btn:hover {
     filter:brightness(50%);
 }
@@ -73,6 +73,19 @@
     max-width: 300px;
     min-width: 200px;
     position: relative;
+}
+
+/* FIXME: corriger la position qui n'est pas bonne */
+.container-is-done {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-is-done {
+    
 }
 
 .btn-container {

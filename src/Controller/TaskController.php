@@ -109,4 +109,15 @@ class TaskController extends AbstractController
         $token = $csrfTokenManagerInterface->getToken('delete_'. $task->getId())->getValue();
         return new JsonResponse(["token" => $token], 200, []);
     }
+
+    #[Route(path: '/{id}/toggleIsDone', name: 'app_toggle_is_done', methods: ['POST'])]
+    public function toggleIsDone(Task $task, ResponseController $responseController, EntityManagerInterface $entityManager) {
+        $user = $this->getUser();
+        if($responseController->checkAuthor($user, $task, "edit")) {
+            return $responseController->checkAuthor($user, $task, "edit");
+        }
+        $task->setIsDone(!$task->isIsDone());
+        $entityManager->flush();
+        return new JsonResponse([], 200, []);
+    }
 }

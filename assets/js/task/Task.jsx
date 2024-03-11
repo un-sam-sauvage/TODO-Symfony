@@ -20,6 +20,7 @@ function Tasks () {
         load()
     }, []);
 
+    //TODO: faire un bouton qui cache les tâches qui sont faites
     return <div>
         <button className="btn grow primary" onClick={toggleShowForm}>Create a new task</button>
         {
@@ -38,7 +39,7 @@ function Tasks () {
             setTasks={setTasks}
             tasks={tasks}
             />
-            )}
+        )}
         </div>
         {loading && <SpinnerComponent />}
         </div>
@@ -49,6 +50,7 @@ function Task ({task, tasks, setTasks})  {
     const [isEdit, toggleIsEdit] = useToggle(false);
     const [showPopup, toggleShowPopup] = useToggle(false);
     const [isLoading, toggleIsLoading] = useToggle(false);
+    const [isDone, toggleIsDone] = useToggle(task.isDone);
     
     const [canDelete, setCanDelete] = useState(false)
     const [token, setToken] = useState('');
@@ -81,6 +83,11 @@ function Task ({task, tasks, setTasks})  {
         toggleShowPopup();
     }, []);
 
+    const onChangeToggleIsDone = useCallback(() => {
+        toggleIsDone();
+        loadToggleIsDone();
+    })
+
     const removeTaskFromList = useCallback(() => {
         const newList = tasks.filter((taskItem) => taskItem.id !== task.id);        
         setTasks(newList);
@@ -107,10 +114,15 @@ function Task ({task, tasks, setTasks})  {
     //Il faut bien penser à définir les callbacks avant de les appeler sinon il ne les trouve pas (et en plus ne met pas d'erreur);
     const {load: loadDelete, loading: loadingDelete, errors: errorsDelete} = useFetch('/task/'+ task.id + '/delete', 'DELETE', removeTaskFromList)
     const {load: loadToken, loading: loadingToken, errors: errorsToken} = useFetch('/task/' + task.id + '/get-token', 'GET', deleteTask);
+    const {load: loadToggleIsDone} = useFetch('/task/' + task.id + '/toggleIsDone', 'POST');
 
     return <div className="task-card">
         <h3 className="task-title">{task.title}</h3>
         <p className="task-description">{task.description}</p>
+        <div className="container-is-done">
+        <label htmlFor="task-is-done">Mark as {isDone ? "not finished" : "inished"}</label>
+        <input type="checkbox" className="task-is-done" checked={isDone} onChange={onChangeToggleIsDone}/>
+        </div>
         <div className="btn-container">
             <button className="btn grow secondary"  onClick={getToken}><IconComponent iconName={"trash"}/></button>
             <button className="btn grow secondary" onClick={toggleIsEdit}><IconComponent iconName={"pen-to-square"}/></button>
