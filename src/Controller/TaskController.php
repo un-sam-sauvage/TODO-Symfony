@@ -118,6 +118,7 @@ class TaskController extends AbstractController
         }
         $task->setIsDone(!$task->isIsDone());
         $entityManager->flush();
-        return new JsonResponse([], 200, []);
+        $jsonTask = $this->serializer->serialize($task, "json", ["groups" => "getTask"]);
+        return new JsonResponse($jsonTask, 200, []);
     }
 }

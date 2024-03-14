@@ -34,7 +34,7 @@ export function useFetch (url, method = "POST", callback = null) {
         try {
             setLoading(true);
             const response = await jsonFetch(url, method, data);
-            setLoading(false);
+            
             //DEBUG
             if (response) {
                 console.log(response);
@@ -50,7 +50,9 @@ export function useFetch (url, method = "POST", callback = null) {
         } catch (error) {
             console.error(error);
             setErrors(error);
+            setLoading(false);
         }
+        setLoading(false);
     }, [url, method, callback]);
     return {
         loading,

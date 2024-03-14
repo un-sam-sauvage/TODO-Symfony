@@ -12,7 +12,10 @@ import '../../styles/app.css';
 
 function Tasks () {
     const {items: tasks, setItems: setTasks, load, loading} = useFetch('/task', 'GET');
-    const [showForm, toggleShowForm] = useToggle(false)
+
+    const [showForm, toggleShowForm] = useToggle(false);
+    const [showTaskDone, toggleShowTaskDone] = useToggle(true);
+
     const addTask = useCallback((task) => {
         setTasks(tasks => [task, ...tasks])
     })
@@ -20,9 +23,9 @@ function Tasks () {
         load()
     }, []);
 
-    //TODO: faire un bouton qui cache les tâches qui sont faites
     return <div>
         <button className="btn grow primary" onClick={toggleShowForm}>Create a new task</button>
+        <button className="btn grow primary" onClick={toggleShowTaskDone}>{showTaskDone ? "Hide" : "Show"} task done</button>
         {
             showForm && <FormComponent 
             route={'/task/new'}
@@ -38,6 +41,7 @@ function Tasks () {
             task={task} 
             setTasks={setTasks}
             tasks={tasks}
+            showTaskDone={showTaskDone}
             />
         )}
         </div>
@@ -45,11 +49,12 @@ function Tasks () {
         </div>
 }
 
-function Task ({task, tasks, setTasks})  {
+function Task ({task, tasks, setTasks, showTaskDone})  {
 
+    if (!showTaskDone && task.isDone) return;
+    
     const [isEdit, toggleIsEdit] = useToggle(false);
     const [showPopup, toggleShowPopup] = useToggle(false);
-    const [isLoading, toggleIsLoading] = useToggle(false);
     const [isDone, toggleIsDone] = useToggle(task.isDone);
     
     const [canDelete, setCanDelete] = useState(false)
@@ -63,15 +68,14 @@ function Task ({task, tasks, setTasks})  {
                 token: token
             })
         }
-    }, [canDelete, token])
+    }, [canDelete, token, isDone])
 
     const callbackSetCanDelete = useCallback(() => {
         setCanDelete(true)
-        toggleIsLoading();
     })
 
     const deleteTask = useCallback((tokenRetrieved = null) => {
-        //FIXME: Quand il y a une erreur suite à la suppression d'une tâche, le loading reste
+
         if(tokenRetrieved.token && (errorsToken && errorsToken.error == "" || errorsToken.error == undefined)) {
             setToken(tokenRetrieved.token);
         }
@@ -79,7 +83,9 @@ function Task ({task, tasks, setTasks})  {
 
     const getToken = useCallback(e => {
         e.preventDefault();
-        loadToken();
+        if (token == '') {
+            loadToken();
+        }
         toggleShowPopup();
     }, []);
 
@@ -94,12 +100,14 @@ function Task ({task, tasks, setTasks})  {
     })
 
     const updateTask = useCallback((t) => {
+        console.log("je suis bien update" + t);
         const newTaskList = tasks.map((taskItem) => {
             if (taskItem.id === t.id) {
               const updatedTaskItem = {
                 ...taskItem,
                 description: t.description,
-                title: t.title
+                title: t.title,
+                isDone: t.isDone
               };
       
               return updatedTaskItem;
@@ -114,15 +122,18 @@ function Task ({task, tasks, setTasks})  {
     //Il faut bien penser à définir les callbacks avant de les appeler sinon il ne les trouve pas (et en plus ne met pas d'erreur);
     const {load: loadDelete, loading: loadingDelete, errors: errorsDelete} = useFetch('/task/'+ task.id + '/delete', 'DELETE', removeTaskFromList)
     const {load: loadToken, loading: loadingToken, errors: errorsToken} = useFetch('/task/' + task.id + '/get-token', 'GET', deleteTask);
-    const {load: loadToggleIsDone} = useFetch('/task/' + task.id + '/toggleIsDone', 'POST');
+    const {load: loadToggleIsDone, errors: errorsToggleIsDone} = useFetch('/task/' + task.id + '/toggleIsDone', 'POST', updateTask);
 
-    return <div className="task-card">
-        <h3 className="task-title">{task.title}</h3>
-        <p className="task-description">{task.description}</p>
-        <div className="container-is-done">
-        <label htmlFor="task-is-done">Mark as {isDone ? "not finished" : "inished"}</label>
-        <input type="checkbox" className="task-is-done" checked={isDone} onChange={onChangeToggleIsDone}/>
+    return <div className={"task-card " + (isDone ? "task-done" : "")}>
+        <div className="task-card-top-container">
+            <h3 className="task-title">{task.title}</h3>
+            {token}
+            <div className="container-is-done">
+                <label htmlFor="checkbox-task-is-done">{isDone ? "done" : "todo"}</label>
+                <input type="checkbox" className="checkbox-task-is-done" checked={isDone} onChange={onChangeToggleIsDone}/>
+            </div>
         </div>
+        <p className="task-description">{task.description}</p>
         <div className="btn-container">
             <button className="btn grow secondary"  onClick={getToken}><IconComponent iconName={"trash"}/></button>
             <button className="btn grow secondary" onClick={toggleIsEdit}><IconComponent iconName={"pen-to-square"}/></button>
@@ -145,7 +156,7 @@ function Task ({task, tasks, setTasks})  {
             yesCallback={() => {callbackSetCanDelete()}}
             />
         }
-        {isLoading && <SpinnerComponent />}
+        {(canDelete && loadingToken) && <SpinnerComponent />}
     </div>
 }
 
